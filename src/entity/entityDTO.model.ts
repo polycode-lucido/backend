@@ -5,4 +5,5 @@ export interface EntityDTO {
   email: string;
   password: string;
   validated: boolean;
+  validation_token?: string;
 }
