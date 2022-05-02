@@ -8,7 +8,6 @@ import {
   NotFoundError,
 } from 'src/errors';
 import { TokenService } from 'src/token/token.service';
-import { refreshPublicKey } from '../secrets';
 
 @Injectable()
 export class RefreshStrategy extends PassportStrategy(Strategy, 'refresh') {
@@ -17,7 +16,7 @@ export class RefreshStrategy extends PassportStrategy(Strategy, 'refresh') {
       jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('Bearer'),
       ignoreExpiration: true,
       algorithms: ['RS512'],
-      secretOrKey: refreshPublicKey,
+      secretOrKey: process.env['REFRESH_PUBLIC_KEY'],
       passReqToCallback: true,
     });
   }

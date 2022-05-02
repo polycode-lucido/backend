@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
 import { EntityDTO } from 'src/entity/entityDTO.model';
 import { NotFoundError } from 'src/errors';
-import { accessPrivateKey, refreshPrivateKey } from 'src/secrets';
 import { EntityToken } from './token.model';
 
 @Injectable()
@@ -19,7 +18,7 @@ export class TokenService {
       {
         id: entity.id,
       },
-      { algorithm: 'RS512', privateKey: refreshPrivateKey },
+      { algorithm: 'RS512', privateKey: process.env['REFRESH_PRIVATE_KEY'] },
     );
 
     this.tokenModel.create({
@@ -43,7 +42,11 @@ export class TokenService {
       {
         id: userId,
       },
-      { algorithm: 'RS512', privateKey: accessPrivateKey },
+      {
+        algorithm: 'RS512',
+        privateKey: process.env['ACCSES_PRIVATE_KEY'],
+        expiresIn: '30s',
+      },
     );
 
     user.hashedAccessToken = accessToken;

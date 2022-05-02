@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
+import { Dialect } from 'sequelize/types';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 import { EntityModule } from './entity/entity.module';
 import { TokenModule } from './token/token.module';
-import { AuthModule } from './auth/auth.module';
-import { EmailModule } from './email/email.module';
-import { ConfigModule } from '@nestjs/config';
-import { Dialect } from 'sequelize/types';
 
 @Module({
   imports: [
@@ -26,7 +25,6 @@ import { Dialect } from 'sequelize/types';
     EntityModule,
     TokenModule,
     AuthModule,
-    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { accessPrivateKey, accessPublicKey } from 'src/secrets';
 import { EntityToken } from './token.model';
 import { TokenService } from './token.service';
 
@@ -9,8 +8,8 @@ import { TokenService } from './token.service';
   imports: [
     SequelizeModule.forFeature([EntityToken]),
     JwtModule.register({
-      privateKey: accessPrivateKey,
-      publicKey: accessPublicKey,
+      privateKey: process.env['ACCESS_PRIVATE_KEY'],
+      publicKey: process.env['ACCESS_PUBLIC_KEY'],
       signOptions: { expiresIn: '60s' },
     }),
   ],

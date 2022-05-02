@@ -11,7 +11,7 @@ export class AuthService {
     private readonly tokenService: TokenService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async checkPassword(email: string, password: string): Promise<any> {
     const user = await this.entityService.findByEmail(email);
     if (!user) {
       throw new NotFoundError('User not found');

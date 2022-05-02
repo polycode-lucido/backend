@@ -1,18 +1,32 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { SesModule } from '@nextnm/nestjs-ses';
+import { DynamicModule, Module } from '@nestjs/common';
+import { AWSSesModule } from 'src/email/ses/awsses.module';
+import { AWSSesService } from 'src/email/ses/awsses.service';
 import { EmailService } from './email.service';
 
-@Module({
-  imports: [
-    ConfigModule.forRoot(),
-    SesModule.forRoot({
-      SECRET: process.env['AWS_SECRET'],
-      REGION: process.env['AWS_REGION'],
-      AKI_KEY: process.env['AWS_AKI'],
-    }),
-  ],
-  providers: [EmailService],
-  exports: [EmailService],
-})
-export class EmailModule {}
+export enum EmailProviderType {
+  SES = 'SES',
+}
+export interface EmailProvider {
+  sendMail(to: string, subject: string, text: string);
+}
+
+@Module({})
+export class EmailModule {
+  static forRoot(options: { emailProvider: EmailProviderType }): DynamicModule {
+    switch (options.emailProvider) {
+      case EmailProviderType.SES:
+        return {
+          imports: [AWSSesModule],
+          providers: [
+            EmailService,
+            {
+              provide: 'EmailProviderService',
+              useExisting: AWSSesService,
+            },
+          ],
+          module: EmailModule,
+          exports: [EmailService],
+        };
+    }
+  }
+}

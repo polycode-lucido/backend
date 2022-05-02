@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { hash } from 'bcrypt';
 import { EmailService } from 'src/email/email.service';
-import { EntityDTO } from 'src/entity/entityDTO.model';
+import { createDTOFromEntity, EntityDTO } from 'src/entity/entityDTO.model';
 import {
   ConflictError,
   ForbiddenError,
@@ -15,26 +15,35 @@ import { Entity } from './entity.model';
 export class EntityService {
   constructor(
     @InjectModel(Entity)
-    private userModel: typeof Entity,
+    private entityModel: typeof Entity,
     private readonly tokenService: TokenService,
     private readonly emailService: EmailService,
   ) {}
 
   async findByEmail(email: string): Promise<Entity> {
-    const user = await this.userModel.findOne({
+    const entity = await this.entityModel.findOne({
       where: {
         email,
       },
     });
-    if (!user) {
+    if (!entity) {
       throw new NotFoundError('User not found');
     }
 
-    return user;
+    return entity;
+  }
+
+  async findById(id: string): Promise<EntityDTO> {
+    const entity = await this.entityModel.findByPk(id);
+    if (!entity) {
+      throw new NotFoundError('Entity not found');
+    }
+
+    return createDTOFromEntity(entity);
   }
 
   findAll(): Promise<Entity[]> {
-    return this.userModel.findAll();
+    return this.entityModel.findAll();
   }
 
   async create(entity: EntityDTO): Promise<Entity> {
@@ -55,7 +64,7 @@ export class EntityService {
       );
     }
 
-    const user = await this.userModel.findOne({
+    const user = await this.entityModel.findOne({
       where: {
         email: entity.email,
       },
@@ -66,7 +75,7 @@ export class EntityService {
       entity.password = await hash(entity.password, 10);
       entity.validated = false;
 
-      const user = await this.userModel.create({ ...entity });
+      const user = await this.entityModel.create({ ...entity });
 
       this.tokenService.create(user);
       this.sendVerificationEmail(user);
@@ -92,7 +101,7 @@ export class EntityService {
       throw new InvalidArgumentError('Token is required');
     }
 
-    const entity = await this.userModel.findOne({
+    const entity = await this.entityModel.findOne({
       where: {
         validation_token: token,
       },
@@ -116,7 +125,7 @@ export class EntityService {
       throw new InvalidArgumentError('Email is required');
     }
 
-    const entity = await this.userModel.findOne({
+    const entity = await this.entityModel.findOne({
       where: {
         email,
       },
@@ -144,9 +153,7 @@ export class EntityService {
       throw new InvalidArgumentError('Password is required');
     }
 
-    console.log(password);
-
-    const entity = await this.userModel.findOne({
+    const entity = await this.entityModel.findOne({
       where: {
         reset_password_token: token,
       },
