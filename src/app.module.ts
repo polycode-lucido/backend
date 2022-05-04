@@ -6,8 +6,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { EntityModule } from './entity/entity.module';
+import {
+  RunLanguages,
+  RunnerModule,
+  RunnerProviderType,
+} from './runner/runner.module';
 import { TokenModule } from './token/token.module';
-import { RunnerModule, RunnerProviderType } from './runner/runner.module';
 
 @Module({
   imports: [
@@ -26,7 +30,16 @@ import { RunnerModule, RunnerProviderType } from './runner/runner.module';
     EntityModule,
     TokenModule,
     AuthModule,
-    RunnerModule.forRoot({ runnerProvider: RunnerProviderType.ForkExec }),
+    RunnerModule.forRoot(RunnerProviderType.Docker, {
+      docker: {
+        images: [
+          {
+            language: RunLanguages.Python,
+            tag: 'python:3.10',
+          },
+        ],
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

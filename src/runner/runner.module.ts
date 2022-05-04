@@ -4,6 +4,11 @@ import { ForkStrategyModule } from './fork-strategy/fork-strategy.module';
 import { ForkStrategyService } from './fork-strategy/fork-strategy.service';
 import { RunnerController } from './runner.controller';
 import { DockerStrategyModule } from './docker-strategy/docker-strategy.module';
+import {
+  DockerImagesDescription,
+  DockerStrategyService,
+} from './docker-strategy/docker-strategy.service';
+import Dockerode from 'dockerode';
 
 export enum RunnerProviderType {
   Docker,
@@ -30,14 +35,19 @@ export interface RunnerProvider {
   ): Promise<RunnerExecutionResults>;
 }
 
-@Module({
-  imports: [DockerStrategyModule],
-})
+export interface RunnerOptions {
+  docker?: {
+    images?: DockerImagesDescription[];
+    docker?: Dockerode;
+  };
+}
+@Module({})
 export class RunnerModule {
-  static forRoot(options: {
-    runnerProvider: RunnerProviderType;
-  }): DynamicModule {
-    switch (options.runnerProvider) {
+  static forRoot(
+    runnerProvider: RunnerProviderType,
+    options?: RunnerOptions,
+  ): DynamicModule {
+    switch (runnerProvider) {
       case RunnerProviderType.ForkExec:
         return {
           imports: [ForkStrategyModule],
@@ -46,6 +56,19 @@ export class RunnerModule {
             {
               provide: 'RunnerProviderService',
               useExisting: ForkStrategyService,
+            },
+          ],
+          module: RunnerModule,
+          exports: [RunnerService],
+        };
+      case RunnerProviderType.Docker:
+        return {
+          imports: [DockerStrategyModule.register(options)],
+          providers: [
+            RunnerService,
+            {
+              provide: 'RunnerProviderService',
+              useExisting: DockerStrategyService,
             },
           ],
           module: RunnerModule,
