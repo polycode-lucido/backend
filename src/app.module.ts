@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { EntityModule } from './entity/entity.module';
 import { TokenModule } from './token/token.module';
+import { RunnerModule, RunnerProviderType } from './runner/runner.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { TokenModule } from './token/token.module';
     EntityModule,
     TokenModule,
     AuthModule,
+    RunnerModule.forRoot({ runnerProvider: RunnerProviderType.ForkExec }),
   ],
   controllers: [AppController],
   providers: [AppService],
