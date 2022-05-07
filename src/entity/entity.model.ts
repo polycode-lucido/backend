@@ -21,7 +21,7 @@ export class Entity extends Model {
   @PrimaryKey
   @Default(DataTypes.UUIDV4)
   @Column(DataTypes.UUID)
-  id: string;
+  declare id: string;
 
   @IsEmail
   @AllowNull(false)
