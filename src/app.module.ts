@@ -38,6 +38,7 @@ import { TokenModule } from './token/token.module';
             tag: 'python:3.10',
           },
         ],
+        timeout: 5000,
       },
     }),
   ],
