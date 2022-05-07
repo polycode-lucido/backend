@@ -26,12 +26,14 @@ export interface RunnerExecutionResults {
   stdout: string;
   stderr: string;
   exitCode?: number;
+  runId: number;
 }
 
 export interface RunnerProvider {
   run(
     sourceCode: string,
     strategy: RunLanguages,
+    runId: number,
   ): Promise<RunnerExecutionResults>;
 }
 
@@ -39,6 +41,7 @@ export interface RunnerOptions {
   docker?: {
     images?: DockerImagesDescription[];
     docker?: Dockerode;
+    timeout?: number;
   };
 }
 @Module({})

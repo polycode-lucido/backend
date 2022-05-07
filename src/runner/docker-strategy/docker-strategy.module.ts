@@ -1,13 +1,17 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { RunnerOptions } from '../runner.module';
-import { imagesProvidersFactory } from './docker-strategy.providers';
+import {
+  imagesProvidersFactory,
+  RUNNER_OPTIONS,
+} from './docker-strategy.providers';
 import { DockerStrategyService } from './docker-strategy.service';
 
 @Module({
   imports: [],
   providers: [
+    DockerStrategyService,
     {
-      provide: 'RunnerOptions',
+      provide: RUNNER_OPTIONS,
       useFactory: async () => await imagesProvidersFactory({}),
     },
   ],
@@ -18,11 +22,11 @@ export class DockerStrategyModule {
     return {
       imports: [],
       providers: [
+        DockerStrategyService,
         {
-          provide: 'RunnerOptions',
+          provide: RUNNER_OPTIONS,
           useFactory: async () => await imagesProvidersFactory(options),
         },
-        DockerStrategyService,
       ],
       module: DockerStrategyModule,
       exports: [DockerStrategyService],

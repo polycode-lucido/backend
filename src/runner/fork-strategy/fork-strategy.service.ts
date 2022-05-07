@@ -13,35 +13,44 @@ export class ForkStrategyService implements RunnerProvider {
   async run(
     sourceCode: string,
     strategy: RunLanguages,
+    runId: number,
   ): Promise<RunnerExecutionResults> {
     switch (strategy) {
       case RunLanguages.Python:
-        return this.runPython(sourceCode);
+        return { runId, ...(await this.runPython(sourceCode)) };
       case RunLanguages.Java:
-        return this.runJava(sourceCode);
+        return { runId, ...(await this.runJava(sourceCode)) };
       case RunLanguages.Rust:
-        return this.runRust(sourceCode);
+        return { runId, ...(await this.runRust(sourceCode)) };
       case RunLanguages.Node:
-        return this.runNode(sourceCode);
+        return { runId, ...(await this.runNode(sourceCode)) };
     }
   }
 
-  private async runNode(sourceCode: string): Promise<RunnerExecutionResults> {
+  private async runNode(
+    sourceCode: string,
+  ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
     const filename = this.writeSourceCode(sourceCode, 'js');
     return this.exec('node', [filename]);
   }
 
-  private async runPython(sourceCode: string): Promise<RunnerExecutionResults> {
+  private async runPython(
+    sourceCode: string,
+  ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
     const filename = this.writeSourceCode(sourceCode, 'py');
     return this.exec('python3', [filename]);
   }
 
-  private async runJava(sourceCode: string): Promise<RunnerExecutionResults> {
+  private async runJava(
+    sourceCode: string,
+  ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
     const filename = this.writeSourceCode(sourceCode, 'java');
     return this.exec('java', [filename]);
   }
 
-  private async runRust(sourceCode: string): Promise<RunnerExecutionResults> {
+  private async runRust(
+    sourceCode: string,
+  ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
     const filename = this.writeSourceCode(sourceCode, 'rs');
     const binaryFile = filename.slice(0, -3);
     const compiler = await this.exec(
@@ -79,7 +88,7 @@ export class ForkStrategyService implements RunnerProvider {
     binary: string,
     options?: string[],
     deleteFiles = true,
-  ): Promise<RunnerExecutionResults> {
+  ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
     let stdout = '';
     let stderr = '';
 

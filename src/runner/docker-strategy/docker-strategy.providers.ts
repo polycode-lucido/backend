@@ -4,6 +4,8 @@ import { Stream } from 'stream';
 import { RunLanguages, RunnerOptions } from '../runner.module';
 import { DockerImagesDescription } from './docker-strategy.service';
 
+export const RUNNER_OPTIONS = 'RunnerOptions';
+
 export async function imagesProvidersFactory(options: RunnerOptions) {
   const images: DockerImagesDescription[] = [
     {
@@ -33,7 +35,15 @@ export async function imagesProvidersFactory(options: RunnerOptions) {
 
     if (optionsImages) {
       optionsImages.forEach((image) => {
-        images.find((i) => i.language == image.language).tag = image.tag;
+        const imageFound = images.find((i) => i.language === image.language);
+        if (!imageFound) {
+          Logger.error(
+            `Language ${image.language} is not supported`,
+            'DockerStrategyProvider',
+          );
+        } else {
+          imageFound.tag = image.tag;
+        }
       });
     }
 
@@ -71,9 +81,11 @@ export async function imagesProvidersFactory(options: RunnerOptions) {
 
     await Promise.all(promises);
 
-    options = { docker: { images, docker: dockerInstance }, ...options };
-    return options;
+    return {
+      ...options,
+      docker: { ...options.docker, images: images, docker: dockerInstance },
+    };
   } catch (err: unknown) {
-    Logger.error(err);
+    Logger.error(err, 'DockerStrategyProvider');
   }
 }

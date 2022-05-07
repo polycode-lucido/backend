@@ -11,23 +11,7 @@ export class RunnerService {
     this.runnerProvider = runnerProviderService;
   }
 
-  async run(sourceCode: string, strategy: RunLanguages) {
-    return await this.runnerProvider.run(sourceCode, strategy);
-  }
-
-  async runNode(sourceCode: string) {
-    return await this.run(sourceCode, RunLanguages.Node);
-  }
-
-  async runPython(sourceCode: string) {
-    return await this.run(sourceCode, RunLanguages.Python);
-  }
-
-  async runJava(sourceCode: string) {
-    return await this.run(sourceCode, RunLanguages.Java);
-  }
-
-  async runRust(sourceCode: string) {
-    return await this.run(sourceCode, RunLanguages.Rust);
+  async run(sourceCode: string, strategy: RunLanguages, runId: number) {
+    return await this.runnerProvider.run(sourceCode, strategy, runId);
   }
 }
