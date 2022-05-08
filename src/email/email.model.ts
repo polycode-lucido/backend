@@ -2,6 +2,7 @@ import { AWSSesOptions } from './ses/awsses.module';
 
 export enum EmailProviderType {
   SES = 'SES',
+  FAKE = 'fake',
 }
 export interface EmailProvider {
   sendMail(to: string, subject: string, text: string);
