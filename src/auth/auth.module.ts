@@ -8,14 +8,15 @@ import { AuthService } from './auth.service';
 import { LocalStrategy } from './strategies/local.strategy';
 import { RefreshStrategy } from './strategies/refresh.strategy';
 import { ConfigModule } from '@nestjs/config';
+import { registerer, validationSchema } from './auth.config';
 
 @Module({
   providers: [AuthService, LocalStrategy, RefreshStrategy, AccessStrategy],
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
     EntityModule,
     PassportModule,
     TokenModule,
+    ConfigModule.forRoot({ load: [registerer], validationSchema }),
   ],
   controllers: [AuthController],
 })

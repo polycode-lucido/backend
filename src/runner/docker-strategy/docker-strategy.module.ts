@@ -1,10 +1,12 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { RunnerOptions } from '../runner.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { RunnerOptions, RUNNER_OPTIONS } from '../runner.model';
 import {
   imagesProvidersFactory,
-  RUNNER_OPTIONS,
+  imagesProvidersFactoryAsync,
 } from './docker-strategy.providers';
 import { DockerStrategyService } from './docker-strategy.service';
+import { registerer, validationSchema } from './docker-strategy.config';
 
 @Module({
   imports: [],
@@ -26,6 +28,28 @@ export class DockerStrategyModule {
         {
           provide: RUNNER_OPTIONS,
           useFactory: async () => await imagesProvidersFactory(options),
+        },
+      ],
+      module: DockerStrategyModule,
+      exports: [DockerStrategyService],
+    };
+  }
+
+  static async registerAsync(): Promise<DynamicModule> {
+    return {
+      imports: [
+        ConfigModule.forRoot({
+          load: [registerer],
+          validationSchema: validationSchema,
+        }),
+      ],
+      providers: [
+        DockerStrategyService,
+        {
+          provide: RUNNER_OPTIONS,
+          inject: [ConfigService],
+          useFactory: async (configService: ConfigService) =>
+            await imagesProvidersFactoryAsync(configService),
         },
       ],
       module: DockerStrategyModule,

@@ -18,19 +18,19 @@ import { Entity } from '../entity/entity.model';
 })
 export class EntityToken extends Model {
   @Column(DataTypes.STRING(1024))
-  hashedAccessToken: string;
+  declare hashedAccessToken: string;
 
   @NotNull
   @AllowNull(false)
   @Unique
   @Column(DataTypes.STRING(1024))
-  hashedRefreshToken: string;
+  declare hashedRefreshToken: string;
 
   @PrimaryKey
   @ForeignKey(() => Entity)
   @Column(DataTypes.UUID)
-  entityId: string;
+  declare entityId: string;
 
   @BelongsTo(() => Entity, 'entityId')
-  entity: Entity;
+  declare entity: Entity;
 }

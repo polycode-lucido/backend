@@ -1,59 +1,41 @@
+import { InvalidArgumentError } from './../errors';
 import { DynamicModule, Module } from '@nestjs/common';
-import { RunnerService } from './runner.service';
+import { ConfigModule } from '@nestjs/config';
+import { DockerStrategyModule } from './docker-strategy/docker-strategy.module';
+import { DockerStrategyService } from './docker-strategy/docker-strategy.service';
 import { ForkStrategyModule } from './fork-strategy/fork-strategy.module';
 import { ForkStrategyService } from './fork-strategy/fork-strategy.service';
 import { RunnerController } from './runner.controller';
-import { DockerStrategyModule } from './docker-strategy/docker-strategy.module';
-import {
-  DockerImagesDescription,
-  DockerStrategyService,
-} from './docker-strategy/docker-strategy.service';
-import Dockerode from 'dockerode';
+import { RunnerProviderType } from './runner.model';
+import { RunnerService } from './runner.service';
 
-export enum RunnerProviderType {
-  Docker,
-  ForkExec,
-}
-
-export enum RunLanguages {
-  Node = 'node',
-  Python = 'python',
-  Java = 'java',
-  Rust = 'rust',
-}
-
-export interface RunnerExecutionResults {
-  stdout: string;
-  stderr: string;
-  exitCode?: number;
-  runId: number;
-}
-
-export interface RunnerProvider {
-  run(
-    sourceCode: string,
-    strategy: RunLanguages,
-    runId: number,
-  ): Promise<RunnerExecutionResults>;
-}
-
-export interface RunnerOptions {
-  docker?: {
-    images?: DockerImagesDescription[];
-    docker?: Dockerode;
-    timeout?: number;
-  };
-}
-@Module({})
+@Module({
+  imports: [ConfigModule.forRoot()],
+})
 export class RunnerModule {
-  static forRoot(
-    runnerProvider: RunnerProviderType,
-    options?: RunnerOptions,
-  ): DynamicModule {
+  static forRoot(): DynamicModule {
+    const runnerProvider = process.env['RUNNER_PROVIDER'];
+    if (
+      !runnerProvider ||
+      (runnerProvider !== RunnerProviderType.Docker &&
+        runnerProvider !== RunnerProviderType.ForkExec)
+    ) {
+      throw new InvalidArgumentError(
+        'RUNNER_PROVIDER is not defined or invalid ( must be docker or forkexec )',
+      );
+    }
+
+    const common = {
+      module: RunnerModule,
+      exports: [RunnerService],
+      controllers: [RunnerController],
+    };
+
     switch (runnerProvider) {
       case RunnerProviderType.ForkExec:
         return {
-          imports: [ForkStrategyModule],
+          ...common,
+          imports: [ForkStrategyModule.registerAsync()],
           providers: [
             RunnerService,
             {
@@ -61,12 +43,11 @@ export class RunnerModule {
               useExisting: ForkStrategyService,
             },
           ],
-          module: RunnerModule,
-          exports: [RunnerService],
         };
       case RunnerProviderType.Docker:
         return {
-          imports: [DockerStrategyModule.register(options)],
+          ...common,
+          imports: [DockerStrategyModule.registerAsync()],
           providers: [
             RunnerService,
             {
@@ -74,9 +55,6 @@ export class RunnerModule {
               useExisting: DockerStrategyService,
             },
           ],
-          module: RunnerModule,
-          exports: [RunnerService],
-          controllers: [RunnerController],
         };
     }
   }

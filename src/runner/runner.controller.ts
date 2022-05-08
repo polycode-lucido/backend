@@ -1,5 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { RunLanguages } from './runner.module';
+import { RunLanguages } from './runner.model';
 import { RunnerService } from './runner.service';
 
 @Controller()

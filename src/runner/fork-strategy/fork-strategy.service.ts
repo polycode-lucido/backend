@@ -1,15 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   RunLanguages,
   RunnerExecutionResults,
+  RunnerOptions,
   RunnerProvider,
-} from '../runner.module';
+  RUNNER_OPTIONS,
+} from '../runner.model';
 import * as fs from 'node:fs';
 import * as process from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 
 @Injectable()
 export class ForkStrategyService implements RunnerProvider {
+  constructor(
+    @Inject(RUNNER_OPTIONS) private readonly runnerOptions: RunnerOptions,
+  ) {
+    this.runnerOptions = runnerOptions;
+  }
+
   async run(
     sourceCode: string,
     strategy: RunLanguages,
@@ -30,7 +38,7 @@ export class ForkStrategyService implements RunnerProvider {
   private async runNode(
     sourceCode: string,
   ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
-    const filename = this.writeSourceCode(sourceCode, 'js');
+    const filename = this.writeSourceCode(sourceCode, 'mjs');
     return this.exec('node', [filename]);
   }
 
@@ -79,7 +87,9 @@ export class ForkStrategyService implements RunnerProvider {
   private deleteSourceCode(filename: string[]): void {
     if (filename) {
       filename.forEach((file) => {
-        fs.unlink(file, (err) => console.error(err));
+        fs.unlink(file, (err) => {
+          if (err) Logger.error(err);
+        });
       });
     }
   }
@@ -101,26 +111,27 @@ export class ForkStrategyService implements RunnerProvider {
       stderr += data;
     });
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const timeout = setTimeout(() => {
         if (deleteFiles) {
           this.deleteSourceCode(options);
         }
         child.kill();
-        const error = new Error('Timeout');
-        reject({ stdout, stderr, error });
-      }, 15000);
+        resolve({ stdout, stderr, exitCode: -128 });
+      }, this.runnerOptions.timeout);
 
-      child.on('close', (exitCode) => {
-        if (deleteFiles) {
-          this.deleteSourceCode(options);
+      child.on('exit', (exitCode, signal) => {
+        if (signal !== 'SIGTERM') {
+          if (deleteFiles) {
+            this.deleteSourceCode(options);
+          }
+          clearTimeout(timeout);
+          resolve({
+            stdout,
+            stderr,
+            exitCode,
+          });
         }
-        clearTimeout(timeout);
-        resolve({
-          stdout,
-          stderr,
-          exitCode,
-        });
       });
     });
   }

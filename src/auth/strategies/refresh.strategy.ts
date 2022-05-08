@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { IncomingMessage } from 'http';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -8,15 +9,19 @@ import {
   NotFoundError,
 } from 'src/errors';
 import { TokenService } from 'src/token/token.service';
+import { registerer } from '../auth.config';
 
 @Injectable()
 export class RefreshStrategy extends PassportStrategy(Strategy, 'refresh') {
-  constructor(private readonly tokenService: TokenService) {
+  constructor(
+    private readonly tokenService: TokenService,
+    @Inject(registerer.KEY) private authConfig: ConfigType<typeof registerer>,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('Bearer'),
       ignoreExpiration: true,
       algorithms: ['RS512'],
-      secretOrKey: process.env['REFRESH_PUBLIC_KEY'],
+      secretOrKey: authConfig.refreshPublicKey,
       passReqToCallback: true,
     });
   }

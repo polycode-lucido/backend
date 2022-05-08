@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { RunLanguages, RunnerProvider } from './runner.module';
+import { RunLanguages, RunnerProvider } from './runner.model';
 
 @Injectable()
 export class RunnerService {

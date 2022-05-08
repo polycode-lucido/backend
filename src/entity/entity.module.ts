@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { EmailModule, EmailProviderType } from 'src/email/email.module';
+import { EmailModule } from 'src/email/email.module';
+import { EmailProviderType } from 'src/email/email.model';
 import { TokenModule } from 'src/token/token.module';
 import { EntityController } from './entity.controller';
 import { Entity } from './entity.model';

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SesEmailOptions, SesService } from '@nextnm/nestjs-ses';
-import { EmailProvider } from '../email.module';
+import { EmailProvider } from '../email.model';
 
 @Injectable()
 export class AWSSesService implements EmailProvider {

@@ -1,46 +1,31 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { Dialect } from 'sequelize/types';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { registerer, validationSchema } from './database.config';
 import { EntityModule } from './entity/entity.module';
-import {
-  RunLanguages,
-  RunnerModule,
-  RunnerProviderType,
-} from './runner/runner.module';
+import { RunnerModule } from './runner/runner.module';
 import { TokenModule } from './token/token.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
-    SequelizeModule.forRoot({
-      dialect: process.env['DATABASE_DIALECT'] as Dialect,
-      host: process.env['DATABASE_HOST'],
-      port: parseInt(process.env['DATABASE_PORT']),
-      username: process.env['DATABASE_USERNAME'],
-      password: process.env['DATABASE_PASSWORD'] || '',
-      database: process.env['DATABASE_DB'],
-      autoLoadModels: true,
-      synchronize: true,
-      logQueryParameters: true,
+    ConfigModule.forRoot({
+      load: [registerer],
+      validationSchema,
+    }),
+    SequelizeModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) =>
+        configService.get('database'),
+
+      inject: [ConfigService],
     }),
     EntityModule,
     TokenModule,
     AuthModule,
-    RunnerModule.forRoot(RunnerProviderType.Docker, {
-      docker: {
-        images: [
-          {
-            language: RunLanguages.Python,
-            tag: 'python:3.10',
-          },
-        ],
-        timeout: 5000,
-      },
-    }),
+    RunnerModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

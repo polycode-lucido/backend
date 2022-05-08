@@ -1,10 +1,9 @@
 import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import * as Docker from 'dockerode';
 import { Stream } from 'stream';
-import { RunLanguages, RunnerOptions } from '../runner.module';
+import { RunLanguages, RunnerOptions } from '../runner.model';
 import { DockerImagesDescription } from './docker-strategy.service';
-
-export const RUNNER_OPTIONS = 'RunnerOptions';
 
 export async function imagesProvidersFactory(options: RunnerOptions) {
   const images: DockerImagesDescription[] = [
@@ -88,4 +87,12 @@ export async function imagesProvidersFactory(options: RunnerOptions) {
   } catch (err: unknown) {
     Logger.error(err, 'DockerStrategyProvider');
   }
+}
+
+export async function imagesProvidersFactoryAsync(
+  configService: ConfigService,
+) {
+  return await imagesProvidersFactory(
+    configService.get<RunnerOptions>('docker'),
+  );
 }

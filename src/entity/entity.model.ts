@@ -27,37 +27,37 @@ export class Entity extends Model {
   @AllowNull(false)
   @NotNull
   @Column(DataTypes.STRING)
-  email: any;
+  declare email: any;
 
   @AllowNull(false)
   @NotNull
   @Column(DataTypes.STRING)
-  firstname: any;
+  declare firstname: any;
 
   @AllowNull(false)
   @NotNull
   @Column(DataTypes.STRING)
-  lastname: any;
+  declare lastname: any;
 
   @AllowNull(false)
   @NotNull
   @Column(DataTypes.STRING)
-  password: any;
+  declare password: any;
 
   @AllowNull(false)
   @NotNull
   @Column(DataTypes.STRING)
-  validation_token: string;
+  declare validation_token: string;
 
   @Column(DataTypes.STRING)
-  reset_password_token: string;
+  declare reset_password_token: string;
 
   @Default(false)
   @Column(DataTypes.BOOLEAN)
-  validated: any;
+  declare validated: any;
 
   @HasOne(() => EntityToken, { as: 'tokens' })
-  tokens: EntityToken;
+  declare tokens: EntityToken;
 
   newPasswordToken() {
     this.reset_password_token = Entity.generateToken();

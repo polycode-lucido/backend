@@ -9,8 +9,8 @@ import {
   RunnerExecutionResults,
   RunnerOptions,
   RunnerProvider,
-} from '../runner.module';
-import { RUNNER_OPTIONS } from './docker-strategy.providers';
+  RUNNER_OPTIONS,
+} from '../runner.model';
 
 export interface DockerImagesDescription {
   tag: string;
@@ -28,8 +28,8 @@ export class DockerStrategyService implements RunnerProvider {
   ) {
     this.docker = runnerOptions.docker.docker;
     this.images = runnerOptions.docker.images;
-    if (runnerOptions.docker.timeout) {
-      this.timeout = runnerOptions.docker.timeout;
+    if (runnerOptions.timeout) {
+      this.timeout = runnerOptions.timeout;
     }
   }
 
