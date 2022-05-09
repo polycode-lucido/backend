@@ -1,4 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { DockerStrategyModule } from './docker-strategy/docker-strategy.module';
+import { DockerStrategyService } from './docker-strategy/docker-strategy.service';
+import { RunnerController } from './runner.controller';
 import { RunnerService } from './runner.service';
 
 describe('RunnerService', () => {
@@ -6,7 +9,16 @@ describe('RunnerService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [RunnerService],
+      exports: [RunnerService],
+      controllers: [RunnerController],
+      imports: [DockerStrategyModule.registerAsync()],
+      providers: [
+        RunnerService,
+        {
+          provide: 'RunnerProviderService',
+          useExisting: DockerStrategyService,
+        },
+      ],
     }).compile();
 
     service = module.get<RunnerService>(RunnerService);
