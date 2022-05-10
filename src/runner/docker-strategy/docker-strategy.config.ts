@@ -5,10 +5,10 @@ import { RunLanguages } from '../runner.model';
 
 export const validationSchema = Joi.object({
   RUNNER_TIMEOUT: Joi.number().default(15000),
-  RUNNER_DOCKER_PYTHON_IMAGE: Joi.string().default('python:3.9'),
-  RUNNER_DOCKER_RUST_IMAGE: Joi.string().default('rust:1.59'),
-  RUNNER_DOCKER_JAVA_IMAGE: Joi.string().default('openjdk:17-jdk'),
-  RUNNER_DOCKER_NODE_IMAGE: Joi.string().default('node:18'),
+  RUNNER_DOCKER_PYTHON_IMAGE: Joi.string(),
+  RUNNER_DOCKER_RUST_IMAGE: Joi.string(),
+  RUNNER_DOCKER_JAVA_IMAGE: Joi.string(),
+  RUNNER_DOCKER_NODE_IMAGE: Joi.string(),
 });
 
 export const registerer = registerAs('docker', (): RunnerOptions => {

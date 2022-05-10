@@ -20,7 +20,7 @@ export async function imagesProvidersFactory(options: RunnerOptions) {
       language: RunLanguages.Java,
     },
     {
-      tag: 'rust:latest',
+      tag: 'rust:1.60',
       language: RunLanguages.Rust,
     },
   ];
@@ -41,12 +41,14 @@ export async function imagesProvidersFactory(options: RunnerOptions) {
             'DockerStrategyProvider',
           );
         } else {
-          imageFound.tag = image.tag;
+          if (image.tag) {
+            imageFound.tag = image.tag;
+          }
         }
       });
     }
 
-    const promises: Promise<void>[] = images.map((image) => {
+    const promises: Promise<void>[] = images.map(async (image) => {
       return new Promise((resolve, reject) => {
         Logger.log(`Pulling image ${image.tag} for ${image.language}`);
         dockerInstance.pull(image.tag, (err, stream: Stream) => {
