@@ -71,3 +71,20 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+## Environment variables :
+
+`REFRESH_PRIVATE_KEY`: Must be defined. Used for refresh token encryption
+`REFRESH_PUBLIC_KEY`: Must be defined. Must correspond to the key pair of the refresh token private key.
+`ACCESS_PRIVATE_KEY`: Must be defined. Used for access token encryption
+`ACCESS_PUBLIC_KEY`: Must be defined. Must correspond to the key pair of the access token private key.
+
+`EMAIL_PROVIDER`: Must be defined. Either `fake` or `SES`. If set to fake, the application will not send any email, but print what it would have sent on stdout. If set to `SES` ( Amazon Simple Email Service ), you must provide `EMAIL_SES_SECRET`, `EMAIL_SES_REGION` and `EMAIL_SES_AKI`.
+
+`RUNNER_PROVIDER`: Must be defined. Either `forkexec` or `docker`. Specifies the strategy to use for running code payloads.
+`RUNNER_TIMEOUT`: Optional. Defines the timeout before killing the runner. Default to `15000` ms.
+`RUNNER_DOCKER_JAVA_IMAGE`: Optional. When using the `docker` runner strategy, specifies what image to use. Defaults to `openjdk:17-jdk`
+`RUNNER_DOCKER_NODE_IMAGE`: Optional. When using the `docker` runner strategy, specifies what image to use. Defaults to `openjdk:17-jdk`
+`RUNNER_DOCKER_RUST_IMAGE`: Optional. When using the `docker` runner strategy, specifies what image to use. Defaults to `openjdk:17-jdk`
+`RUNNER_DOCKER_PYTHON_IMAGE`: Optional. When using the `docker` runner strategy, specifies what image to use. Defaults to `openjdk:17-jdk`
+
