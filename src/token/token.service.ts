@@ -1,9 +1,6 @@
-import { Inject } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
-import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
-import { registerer } from 'src/auth/auth.config';
 import { EntityDTO } from 'src/entity/entityDTO.model';
 import { NotFoundError } from 'src/errors';
 import { EntityToken } from './token.model';

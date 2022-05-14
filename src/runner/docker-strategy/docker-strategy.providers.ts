@@ -50,7 +50,10 @@ export async function imagesProvidersFactory(options: RunnerOptions) {
 
     const promises: Promise<void>[] = images.map(async (image) => {
       return new Promise((resolve, reject) => {
-        Logger.log(`Pulling image ${image.tag} for ${image.language}`);
+        Logger.log(
+          `Pulling image ${image.tag} for ${image.language}`,
+          'DockerStrategyProvider',
+        );
         dockerInstance.pull(image.tag, (err, stream: Stream) => {
           if (err) {
             Logger.error(err);
