@@ -4,6 +4,7 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { ContentModule } from './content/content.module';
 import { registerer, validationSchema } from './database.config';
 import { EntityModule } from './entity/entity.module';
 import { RunnerModule } from './runner/runner.module';
@@ -26,6 +27,7 @@ import { TokenModule } from './token/token.module';
     TokenModule,
     AuthModule,
     RunnerModule.forRoot(),
+    ContentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
