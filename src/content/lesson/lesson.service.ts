@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { NotFoundError } from 'src/errors';
@@ -13,7 +13,9 @@ import { Lesson, LessonDocument } from './entities/lesson.schema';
 export class LessonService {
   constructor(
     @InjectModel(Lesson.name) private lessonModel: Model<LessonDocument>,
+    @Inject(forwardRef(() => ModuleService))
     private readonly moduleService: ModuleService,
+    @Inject(forwardRef(() => CourseService))
     private readonly courseService: CourseService,
   ) {}
 
@@ -54,9 +56,13 @@ export class LessonService {
   }
 
   async findOne(id: string) {
-    return mongoErrorWrapper(
-      async () => await this.lessonModel.findById(id).exec(),
-    );
+    return mongoErrorWrapper(async () => {
+      const lesson = await this.lessonModel.findById(id).exec();
+      if (!lesson) {
+        throw new NotFoundError(`Lesson with id ${id} not found`);
+      }
+      return lesson;
+    });
   }
 
   async update(id: string, updateLessonDto: UpdateLessonDto) {
@@ -95,6 +101,12 @@ export class LessonService {
       }
 
       return await this.lessonModel.findByIdAndDelete(id).exec();
+    });
+  }
+
+  async destroy(id: string) {
+    return mongoErrorWrapper(async () => {
+      this.lessonModel.findByIdAndDelete(id).exec();
     });
   }
 }

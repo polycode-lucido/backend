@@ -5,16 +5,15 @@ import { Document } from 'mongoose';
 import { Course } from 'src/content/course/entities/course.schema';
 import { Children } from 'src/content/models/children.interface';
 import { Parent } from 'src/content/models/parent.interface';
-import { Exercise } from 'src/content/exercice/entities/exercise.schema';
+import { Exercise } from 'src/content/exercise/entities/exercise.schema';
 import { Lesson } from 'src/content/lesson/entities/lesson.schema';
+import { Allow } from 'class-validator';
 
 export type ModuleDocument = Module & Document;
 
 @Schema()
 export class Module extends Content implements Children, Parent {
-  @Prop({ required: true })
-  markdown: string;
-
+  @Allow()
   @Prop()
   description: string;
 
@@ -24,11 +23,14 @@ export class Module extends Content implements Children, Parent {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Module' })
   parentModule: Module;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Exercice' })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Exercise' })
   exercises: Exercise[];
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Lesson' })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Lesson' })
   lessons: Lesson[];
+
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Module' })
+  modules: Module[];
 
   getParent(): Parent {
     return this.parentCourse;

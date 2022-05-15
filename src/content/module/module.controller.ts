@@ -19,27 +19,30 @@ export class ModuleController {
   constructor(private readonly moduleService: ModuleService) {}
 
   @Post()
-  create(@Body() createModuleDto: CreateModuleDto) {
+  async create(@Body() createModuleDto: CreateModuleDto) {
     return this.moduleService.create(createModuleDto);
   }
 
   @Get()
-  findAll() {
+  async findAll() {
     return this.moduleService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.moduleService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateModuleDto: UpdateModuleDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateModuleDto: UpdateModuleDto,
+  ) {
     return this.moduleService.update(id, updateModuleDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     return this.moduleService.remove(id);
   }
 }

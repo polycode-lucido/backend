@@ -4,4 +4,5 @@ import { Course } from '../entities/course.schema';
 export class CreateCourseDto extends OmitType(Course, [
   'exercises',
   'lessons',
+  'modules',
 ]) {}

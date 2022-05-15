@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { NotFoundError } from 'src/errors';
@@ -13,13 +13,15 @@ import { Exercise, ExerciseDocument } from './entities/exercise.schema';
 export class ExerciseService {
   constructor(
     @InjectModel(Exercise.name) private exerciseModel: Model<ExerciseDocument>,
+    @Inject(forwardRef(() => ModuleService))
     private readonly moduleService: ModuleService,
+    @Inject(forwardRef(() => CourseService))
     private readonly courseService: CourseService,
   ) {}
 
-  async create(createExerciceDto: CreateExerciseDto): Promise<Exercise> {
+  async create(createExerciseDto: CreateExerciseDto): Promise<Exercise> {
     return await mongoErrorWrapper(async () => {
-      const { parentCourse, parentModule } = createExerciceDto;
+      const { parentCourse, parentModule } = createExerciseDto;
       let parent;
       if (parentCourse) {
         parent = await this.courseService.findOne(parentCourse);
@@ -35,17 +37,17 @@ export class ExerciseService {
         }
       }
 
-      const createExercice = new this.exerciseModel(createExerciceDto);
-      await createExercice.save();
+      const createExercise = new this.exerciseModel(createExerciseDto);
+      await createExercise.save();
 
       if (parentCourse) {
-        await this.courseService.addExercises(parent, [createExercice]);
+        await this.courseService.addExercises(parent, [createExercise]);
       }
       if (parentModule) {
-        await this.moduleService.addExercises(parent, [createExercice]);
+        await this.moduleService.addExercises(parent, [createExercise]);
       }
 
-      return createExercice;
+      return createExercise;
     });
   }
 
@@ -56,9 +58,13 @@ export class ExerciseService {
   }
 
   async findOne(id: string) {
-    return mongoErrorWrapper(
-      async () => await this.exerciseModel.findById(id).exec(),
-    );
+    return mongoErrorWrapper(async () => {
+      const exercise = await this.exerciseModel.findById(id).exec();
+      if (!exercise) {
+        throw new NotFoundError(`Module with id ${id} not found`);
+      }
+      return exercise;
+    });
   }
 
   async update(id: string, updateExerciseDto: UpdateExerciseDto) {
@@ -97,6 +103,12 @@ export class ExerciseService {
       }
 
       return await this.exerciseModel.findByIdAndDelete(id).exec();
+    });
+  }
+
+  async destroy(id: string) {
+    return mongoErrorWrapper(async () => {
+      this.exerciseModel.findByIdAndDelete(id).exec();
     });
   }
 }

@@ -1,8 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Error, Model } from 'mongoose';
-import { InvalidArgumentError, NotFoundError, UnknownError } from 'src/errors';
-import { ExerciseDocument } from '../exercice/entities/exercise.schema';
+import { Model } from 'mongoose';
+import { NotFoundError } from 'src/errors';
+import { ExerciseDocument } from '../exercise/entities/exercise.schema';
+import { ExerciseService } from '../exercise/exercise.service';
+import { LessonService } from '../lesson/lesson.service';
+import { mongoErrorWrapper } from '../models/error.handler';
+import { ModuleDocument } from '../module/entities/module.schema';
+import { ModuleService } from '../module/module.service';
 import { LessonDocument } from './../lesson/entities/lesson.schema';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
@@ -12,6 +17,12 @@ import { Course, CourseDocument } from './entities/course.schema';
 export class CourseService {
   constructor(
     @InjectModel(Course.name) private courseModel: Model<CourseDocument>,
+    @Inject(forwardRef(() => ExerciseService))
+    private readonly exerciseService: ExerciseService,
+    @Inject(forwardRef(() => LessonService))
+    private readonly lessonService: LessonService,
+    @Inject(forwardRef(() => ModuleService))
+    private readonly moduleService: ModuleService,
   ) {}
 
   async addExercises(course: CourseDocument, exercises: ExerciseDocument[]) {
@@ -24,69 +35,108 @@ export class CourseService {
     return await course.save();
   }
 
+  async addModules(course: CourseDocument, modules: ModuleDocument[]) {
+    course.modules.push(...modules);
+    return await course.save();
+  }
+
   async removeExercise(course: CourseDocument, exercise: ExerciseDocument) {
-    return await this.courseModel.findByIdAndUpdate(exercise.parentCourse, {
-      $pull: { exercises: exercise._id },
-    });
+    return await this.courseModel.findByIdAndUpdate(
+      course._id,
+      {
+        $pull: { exercises: exercise._id },
+      },
+      { new: true },
+    );
   }
 
   async removeLesson(course: CourseDocument, lesson: LessonDocument) {
-    return await this.courseModel.findByIdAndUpdate(lesson.parentCourse, {
-      $pull: { lessons: course._id },
-    });
+    return await this.courseModel.findByIdAndUpdate(
+      course._id,
+      {
+        $pull: { lessons: lesson._id },
+      },
+      { new: true },
+    );
+  }
+
+  async removeModule(course: CourseDocument, module: ModuleDocument) {
+    return await this.courseModel.findByIdAndUpdate(
+      course._id,
+      {
+        $pull: { modules: module._id },
+      },
+      { new: true },
+    );
   }
 
   async create(createCourseDto: CreateCourseDto): Promise<Course> {
-    try {
+    return mongoErrorWrapper(async () => {
       const createCourse = new this.courseModel(createCourseDto);
       return await createCourse.save();
-    } catch (error) {
-      throw new UnknownError(`Unknown error ${error}`);
-    }
+    });
   }
 
   async findAll(): Promise<Course[]> {
-    try {
+    return mongoErrorWrapper(async () => {
       return await this.courseModel.find().exec();
-    } catch (error) {
-      throw new UnknownError(error.message);
-    }
+    });
   }
 
   async findOne(id: string) {
-    try {
-      return await this.courseModel.findById<CourseDocument>(id).exec();
-    } catch (error) {
-      if (error instanceof Error.DocumentNotFoundError) {
+    return mongoErrorWrapper(async () => {
+      const course = await this.courseModel.findById(id).exec();
+      if (!course) {
         throw new NotFoundError(`Course with id ${id} not found`);
-      } else if (error instanceof Error.CastError) {
-        throw new InvalidArgumentError(`Invalid id ${id}`);
       }
-      throw new UnknownError(`Unknown error ${error}`);
-    }
+      return course;
+    });
   }
 
   async update(id: string, updateCourseDto: UpdateCourseDto) {
-    try {
-      return await this.courseModel
-        .findByIdAndUpdate(id, updateCourseDto)
-        .exec();
-    } catch (error) {
-      if (error instanceof Error.DocumentNotFoundError) {
+    return mongoErrorWrapper(async () => {
+      const course = await this.courseModel.findByIdAndUpdate(
+        id,
+        updateCourseDto,
+        {
+          new: true,
+        },
+      );
+      if (!course) {
         throw new NotFoundError(`Course with id ${id} not found`);
       }
-      throw new UnknownError(`Unknown error ${error}`);
-    }
+      return course;
+    });
   }
 
   async remove(id: string) {
-    try {
-      return await this.courseModel.findByIdAndDelete(id).exec();
-    } catch (error) {
-      if (error instanceof Error.DocumentNotFoundError) {
+    return mongoErrorWrapper(async () => {
+      const course = await this.courseModel.findById(id).exec();
+      if (!course) {
         throw new NotFoundError(`Course with id ${id} not found`);
       }
-      throw new UnknownError(`Unknown error ${error}`);
-    }
+
+      const { exercises, lessons, modules } = course;
+
+      const exercisesPromises = exercises.map((exercise: ExerciseDocument) => {
+        this.exerciseService.destroy(exercise._id);
+      });
+
+      const lessonsPromises = lessons.map((lesson: LessonDocument) => {
+        this.lessonService.destroy(lesson._id);
+      });
+
+      const modulesPromises = modules.map((module: ModuleDocument) => {
+        this.moduleService.remove(module._id);
+      });
+
+      await Promise.allSettled([
+        ...exercisesPromises,
+        ...lessonsPromises,
+        ...modulesPromises,
+      ]);
+
+      return await course.delete();
+    });
   }
 }

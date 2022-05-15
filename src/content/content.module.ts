@@ -1,7 +1,7 @@
 import { Logger, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CourseModule } from './course/course.module';
-import { ExerciseModule } from './exercice/exercise.module';
+import { ExerciseModule } from './exercise/exercise.module';
 import { LessonModule } from './lesson/lesson.module';
 import { ModuleModule } from './module/module.module';
 
