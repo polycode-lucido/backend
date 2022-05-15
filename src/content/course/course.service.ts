@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Error, Model } from 'mongoose';
 import { InvalidArgumentError, NotFoundError, UnknownError } from 'src/errors';
+import { ExerciseDocument } from '../exercice/entities/exercise.schema';
+import { LessonDocument } from './../lesson/entities/lesson.schema';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Course, CourseDocument } from './entities/course.schema';
@@ -11,6 +13,28 @@ export class CourseService {
   constructor(
     @InjectModel(Course.name) private courseModel: Model<CourseDocument>,
   ) {}
+
+  async addExercises(course: CourseDocument, exercises: ExerciseDocument[]) {
+    course.exercises.push(...exercises);
+    return await course.save();
+  }
+
+  async addLessons(course: CourseDocument, lessons: LessonDocument[]) {
+    course.lessons.push(...lessons);
+    return await course.save();
+  }
+
+  async removeExercise(course: CourseDocument, exercise: ExerciseDocument) {
+    return await this.courseModel.findByIdAndUpdate(exercise.parentCourse, {
+      $pull: { exercises: exercise._id },
+    });
+  }
+
+  async removeLesson(course: CourseDocument, lesson: LessonDocument) {
+    return await this.courseModel.findByIdAndUpdate(lesson.parentCourse, {
+      $pull: { lessons: course._id },
+    });
+  }
 
   async create(createCourseDto: CreateCourseDto): Promise<Course> {
     try {
@@ -31,7 +55,7 @@ export class CourseService {
 
   async findOne(id: string) {
     try {
-      return await this.courseModel.findById(id).exec();
+      return await this.courseModel.findById<CourseDocument>(id).exec();
     } catch (error) {
       if (error instanceof Error.DocumentNotFoundError) {
         throw new NotFoundError(`Course with id ${id} not found`);

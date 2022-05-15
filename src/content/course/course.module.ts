@@ -10,5 +10,6 @@ import { Course, CourseSchema } from './entities/course.schema';
   ],
   controllers: [CourseController],
   providers: [CourseService],
+  exports: [CourseService],
 })
 export class CourseModule {}

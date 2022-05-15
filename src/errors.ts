@@ -3,6 +3,7 @@ import {
   Catch,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 
@@ -66,7 +67,7 @@ export function HTTPErrorWrapper(handler: () => void) {
 
 @Catch(CustomError)
 export class HTTPErrorFilter extends BaseExceptionFilter {
-  catch(error: unknown, host: ArgumentsHost) {
+  catch(error: any, host: ArgumentsHost) {
     let test = null;
     if (error instanceof ConflictError) {
       test = new HttpException(error.message, HttpStatus.CONFLICT);
@@ -82,6 +83,11 @@ export class HTTPErrorFilter extends BaseExceptionFilter {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+
+    Logger.error(
+      error?.message ? error.message : 'No message',
+      'ExceptionFilter',
+    );
 
     super.catch(test, host);
   }

@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Error, Model } from 'mongoose';
-import { InvalidArgumentError, NotFoundError, UnknownError } from 'src/errors';
+import { Model } from 'mongoose';
+import { NotFoundError } from 'src/errors';
+import { CourseService } from '../course/course.service';
+import { mongoErrorWrapper } from '../models/error.handler';
+import { ModuleService } from '../module/module.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { Lesson, LessonDocument } from './entities/lesson.schema';
@@ -10,59 +13,88 @@ import { Lesson, LessonDocument } from './entities/lesson.schema';
 export class LessonService {
   constructor(
     @InjectModel(Lesson.name) private lessonModel: Model<LessonDocument>,
+    private readonly moduleService: ModuleService,
+    private readonly courseService: CourseService,
   ) {}
 
-  async create(createExerciceDto: CreateLessonDto): Promise<Lesson> {
-    try {
-      const createLesson = new this.lessonModel(createExerciceDto);
-      return await createLesson.save();
-    } catch (error) {
-      throw new UnknownError(`Unknown error ${error}`);
-    }
+  async create(createLessonDto: CreateLessonDto): Promise<Lesson> {
+    return await mongoErrorWrapper(async () => {
+      const { parentCourse, parentModule } = createLessonDto;
+      let parent;
+      if (parentCourse) {
+        parent = await this.courseService.findOne(parentCourse);
+        if (!parent) {
+          throw new NotFoundError('Course not found');
+        }
+      }
+
+      if (parentModule) {
+        parent = await this.moduleService.findOne(parentModule);
+        if (!parent) {
+          throw new NotFoundError('Module not found');
+        }
+      }
+
+      const createLesson = new this.lessonModel(createLessonDto);
+      await createLesson.save();
+
+      if (parentCourse) {
+        await this.courseService.addLessons(parent, [createLesson]);
+      }
+      if (parentModule) {
+        await this.moduleService.addLessons(parent, [createLesson]);
+      }
+
+      return createLesson;
+    });
   }
 
   async findAll(): Promise<Lesson[]> {
-    try {
-      return await this.lessonModel.find().exec();
-    } catch (error) {
-      throw new UnknownError(error.message);
-    }
+    return mongoErrorWrapper(async () => await this.lessonModel.find().exec());
   }
 
   async findOne(id: string) {
-    try {
-      return await this.lessonModel.findById(id).exec();
-    } catch (error) {
-      if (error instanceof Error.DocumentNotFoundError) {
-        throw new NotFoundError(`Lesson with id ${id} not found`);
-      } else if (error instanceof Error.CastError) {
-        throw new InvalidArgumentError(`Invalid id ${id}`);
-      }
-      throw new UnknownError(`Unknown error ${error}`);
-    }
+    return mongoErrorWrapper(
+      async () => await this.lessonModel.findById(id).exec(),
+    );
   }
 
   async update(id: string, updateLessonDto: UpdateLessonDto) {
-    try {
-      return await this.lessonModel
-        .findByIdAndUpdate(id, updateLessonDto)
+    return mongoErrorWrapper(async () => {
+      const newLesson = await this.lessonModel
+        .findByIdAndUpdate(id, updateLessonDto, { new: true })
         .exec();
-    } catch (error) {
-      if (error instanceof Error.DocumentNotFoundError) {
-        throw new NotFoundError(`Lesson with id ${id} not found`);
+      if (!newLesson) {
+        throw new NotFoundError('Lesson not found');
       }
-      throw new UnknownError(`Unknown error ${error}`);
-    }
+      return newLesson;
+    });
   }
 
   async remove(id: string) {
-    try {
-      return await this.lessonModel.findByIdAndDelete(id).exec();
-    } catch (error) {
-      if (error instanceof Error.DocumentNotFoundError) {
-        throw new NotFoundError(`Lesson with id ${id} not found`);
+    return mongoErrorWrapper(async () => {
+      const lesson = await this.lessonModel.findById(id).exec();
+      if (!lesson) {
+        throw new NotFoundError('Lesson not found');
       }
-      throw new UnknownError(`Unknown error ${error}`);
-    }
+
+      const { parentCourse, parentModule } = lesson;
+
+      if (parentCourse && (parentCourse as any)._id) {
+        const parent = await this.courseService.findOne(
+          (parentCourse as any)._id,
+        );
+        await this.courseService.removeLesson(parent, lesson);
+      }
+
+      if (parentModule && (parentModule as any)._id) {
+        const parent = await this.courseService.findOne(
+          (parentModule as any)._id,
+        );
+        await this.courseService.removeLesson(parent, lesson);
+      }
+
+      return await this.lessonModel.findByIdAndDelete(id).exec();
+    });
   }
 }

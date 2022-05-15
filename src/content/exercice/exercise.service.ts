@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Error, Model } from 'mongoose';
-import { InvalidArgumentError, NotFoundError, UnknownError } from 'src/errors';
+import { Model } from 'mongoose';
+import { NotFoundError } from 'src/errors';
+import { CourseService } from '../course/course.service';
+import { mongoErrorWrapper } from '../models/error.handler';
+import { ModuleService } from '../module/module.service';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { Exercise, ExerciseDocument } from './entities/exercise.schema';
@@ -10,59 +13,90 @@ import { Exercise, ExerciseDocument } from './entities/exercise.schema';
 export class ExerciseService {
   constructor(
     @InjectModel(Exercise.name) private exerciseModel: Model<ExerciseDocument>,
+    private readonly moduleService: ModuleService,
+    private readonly courseService: CourseService,
   ) {}
 
   async create(createExerciceDto: CreateExerciseDto): Promise<Exercise> {
-    try {
+    return await mongoErrorWrapper(async () => {
+      const { parentCourse, parentModule } = createExerciceDto;
+      let parent;
+      if (parentCourse) {
+        parent = await this.courseService.findOne(parentCourse);
+        if (!parent) {
+          throw new NotFoundError('Course not found');
+        }
+      }
+
+      if (parentModule) {
+        parent = await this.moduleService.findOne(parentModule);
+        if (!parent) {
+          throw new NotFoundError('Module not found');
+        }
+      }
+
       const createExercice = new this.exerciseModel(createExerciceDto);
-      return await createExercice.save();
-    } catch (error) {
-      throw new UnknownError(`Unknown error ${error}`);
-    }
+      await createExercice.save();
+
+      if (parentCourse) {
+        await this.courseService.addExercises(parent, [createExercice]);
+      }
+      if (parentModule) {
+        await this.moduleService.addExercises(parent, [createExercice]);
+      }
+
+      return createExercice;
+    });
   }
 
   async findAll(): Promise<Exercise[]> {
-    try {
-      return await this.exerciseModel.find().exec();
-    } catch (error) {
-      throw new UnknownError(error.message);
-    }
+    return mongoErrorWrapper(
+      async () => await this.exerciseModel.find().exec(),
+    );
   }
 
   async findOne(id: string) {
-    try {
-      return await this.exerciseModel.findById(id).exec();
-    } catch (error) {
-      if (error instanceof Error.DocumentNotFoundError) {
-        throw new NotFoundError(`Exercise with id ${id} not found`);
-      } else if (error instanceof Error.CastError) {
-        throw new InvalidArgumentError(`Invalid id ${id}`);
-      }
-      throw new UnknownError(`Unknown error ${error}`);
-    }
+    return mongoErrorWrapper(
+      async () => await this.exerciseModel.findById(id).exec(),
+    );
   }
 
   async update(id: string, updateExerciseDto: UpdateExerciseDto) {
-    try {
-      return await this.exerciseModel
-        .findByIdAndUpdate(id, updateExerciseDto)
+    return mongoErrorWrapper(async () => {
+      const newExercise = await this.exerciseModel
+        .findByIdAndUpdate(id, updateExerciseDto, { new: true })
         .exec();
-    } catch (error) {
-      if (error instanceof Error.DocumentNotFoundError) {
-        throw new NotFoundError(`Exercise with id ${id} not found`);
+      if (!newExercise) {
+        throw new NotFoundError('Exercise not found');
       }
-      throw new UnknownError(`Unknown error ${error}`);
-    }
+      return newExercise;
+    });
   }
 
   async remove(id: string) {
-    try {
-      return await this.exerciseModel.findByIdAndDelete(id).exec();
-    } catch (error) {
-      if (error instanceof Error.DocumentNotFoundError) {
-        throw new NotFoundError(`Exercise with id ${id} not found`);
+    return mongoErrorWrapper(async () => {
+      const exercise = await this.exerciseModel.findById(id).exec();
+      if (!exercise) {
+        throw new NotFoundError('Exercise not found');
       }
-      throw new UnknownError(`Unknown error ${error}`);
-    }
+
+      const { parentCourse, parentModule } = exercise;
+
+      if (parentCourse && (parentCourse as any)._id) {
+        const parent = await this.courseService.findOne(
+          (parentCourse as any)._id,
+        );
+        await this.courseService.removeExercise(parent, exercise);
+      }
+
+      if (parentModule && (parentModule as any)._id) {
+        const parent = await this.courseService.findOne(
+          (parentModule as any)._id,
+        );
+        await this.courseService.removeExercise(parent, exercise);
+      }
+
+      return await this.exerciseModel.findByIdAndDelete(id).exec();
+    });
   }
 }
