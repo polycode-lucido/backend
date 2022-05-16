@@ -9,6 +9,7 @@ import { registerer, validationSchema } from './database.config';
 import { EntityModule } from './entity/entity.module';
 import { RunnerModule } from './runner/runner.module';
 import { TokenModule } from './token/token.module';
+import { UserCompletionModule } from './user-completion/user-completion.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { TokenModule } from './token/token.module';
     AuthModule,
     RunnerModule.forRoot(),
     ContentModule,
+    UserCompletionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
