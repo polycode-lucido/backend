@@ -1,10 +1,12 @@
 import { Error } from 'mongoose';
 import {
+  ConflictError,
   CustomError,
   InvalidArgumentError,
   NotFoundError,
   UnknownError,
 } from 'src/errors';
+import { MongoServerError } from 'mongodb';
 
 export function mongoErrorHandler(error: Error) {
   if (error instanceof Error.CastError) {
@@ -19,10 +21,13 @@ export function mongoErrorHandler(error: Error) {
     throw new InvalidArgumentError(message);
   } else if (error instanceof Error.DocumentNotFoundError) {
     throw new NotFoundError(`Not found : `);
+  } else if (error instanceof MongoServerError) {
+    throw new ConflictError(`Conflict`);
   } else if (error instanceof CustomError) {
     throw error;
   } else {
-    throw new UnknownError(error.message);
+    debugger;
+    throw new UnknownError(error.stack);
   }
 }
 

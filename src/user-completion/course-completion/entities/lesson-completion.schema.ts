@@ -12,6 +12,7 @@ export type LessonCompletionDocument = LessonCompletion & Document;
 
 @Schema()
 export class LessonCompletion extends ContentCompletion {
+  @Prop({ type: mongoose.Schema.Types.String, default: ContentType.LESSON })
   type = ContentType.LESSON;
 
   @Allow()
@@ -19,15 +20,12 @@ export class LessonCompletion extends ContentCompletion {
   lesson: Lesson;
 
   @Allow()
-  @Prop({ default: false })
-  completed: boolean;
+  @Prop({ type: mongoose.Schema.Types.Boolean, default: false })
+  completed = false;
 
-  isCompleted(): boolean {
-    return this.completed;
-  }
-
-  progressRate(): number {
-    return this.completed ? 100 : 0;
+  constructor(lesson: Lesson) {
+    super();
+    this.lesson = lesson;
   }
 }
 

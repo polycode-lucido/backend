@@ -45,7 +45,7 @@ export class Module extends Content implements Children, Parent {
   }
 
   getChildren(): Children[] {
-    return [...this.exercises, ...this.lessons];
+    return [...this.exercises, ...this.lessons, ...this.modules];
   }
 }
 

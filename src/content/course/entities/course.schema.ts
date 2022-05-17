@@ -29,7 +29,7 @@ export class Course extends Content implements Parent {
   description: string;
 
   getChildren() {
-    return [...this.exercises, ...this.lessons];
+    return [...this.exercises, ...this.lessons, ...this.modules];
   }
 }
 

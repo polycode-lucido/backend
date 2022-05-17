@@ -1,5 +1,3 @@
-import { Completable } from '../models/completable.interface';
-
 export enum ContentType {
   EXERCISE = 'exercise',
   LESSON = 'lesson',
@@ -7,10 +5,8 @@ export enum ContentType {
   COURSE = 'course',
 }
 
-export abstract class ContentCompletion implements Completable {
+export abstract class ContentCompletion {
   abstract type: ContentType;
-  abstract isCompleted(): boolean;
-  abstract progressRate(): number;
 }
 
 export type ContentDocument = ContentCompletion & Document;

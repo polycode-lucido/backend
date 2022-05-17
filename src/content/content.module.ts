@@ -18,5 +18,6 @@ import { ModuleModule } from './module/module.module';
     LessonModule,
     ModuleModule,
   ],
+  exports: [CourseModule, ExerciseModule, LessonModule, ModuleModule],
 })
 export class ContentModule {}

@@ -1,26 +1,96 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { CourseService } from 'src/content/course/course.service';
+import { mongoErrorWrapper } from 'src/content/models/error.handler';
+import { ModuleService } from 'src/content/module/module.service';
+import { EntityService } from 'src/entity/entity.service';
+import { NotFoundError } from 'src/errors';
 import { CreateCourseCompletionDto } from './dto/create-course-completion.dto';
 import { UpdateCourseCompletionDto } from './dto/update-course-completion.dto';
+import { CourseCompletion } from './entities/course-completion.schema';
 
 @Injectable()
 export class CourseCompletionService {
-  create(createCourseCompletionDto: CreateCourseCompletionDto) {
-    return 'This action adds a new courseCompletion';
+  constructor(
+    @InjectModel(CourseCompletion.name)
+    private courseCompletionModel: Model<CourseCompletion>,
+    private readonly moduleService: ModuleService,
+    private readonly courseService: CourseService,
+    private readonly entityService: EntityService,
+  ) {}
+
+  async create(createCourseCompletionDto: CreateCourseCompletionDto) {
+    return mongoErrorWrapper(async () => {
+      const coursePromise = this.courseService.findOne(
+        createCourseCompletionDto.courseId,
+      );
+
+      const entityPromise = await this.entityService.findById(
+        createCourseCompletionDto.userId,
+      );
+
+      const [course] = await Promise.all([coursePromise, entityPromise]);
+
+      const courseCompletion = await this.courseCompletionModel.create(
+        createCourseCompletionDto,
+      );
+
+      CourseCompletion.populateChildren(
+        courseCompletion,
+        course.exercises,
+        course.lessons,
+        course.modules,
+      );
+
+      debugger;
+
+      return await courseCompletion.save();
+    });
   }
 
-  findAll() {
-    return `This action returns all courseCompletion`;
+  async findAll() {
+    return mongoErrorWrapper(async () => {
+      return await this.courseCompletionModel.find().exec();
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} courseCompletion`;
+  async progressRate(courseCompletionId: string) {
+    return mongoErrorWrapper(async () => {
+      const courseCompletion = await this.courseCompletionModel
+        .findById(courseCompletionId)
+        .exec();
+
+      if (!courseCompletion) {
+        throw new NotFoundError('CourseCompletion not found');
+      }
+
+      return courseCompletion.progressRate;
+    });
   }
 
-  update(id: number, updateCourseCompletionDto: UpdateCourseCompletionDto) {
+  async findOne(courseCompletionId: string) {
+    return mongoErrorWrapper(async () => {
+      const courseCompletion = await this.courseCompletionModel
+        .findById(courseCompletionId)
+        .exec();
+
+      if (!courseCompletion) {
+        throw new NotFoundError('CourseCompletion not found');
+      }
+
+      return courseCompletion;
+    });
+  }
+
+  async update(
+    id: number,
+    updateCourseCompletionDto: UpdateCourseCompletionDto,
+  ) {
     return `This action updates a #${id} courseCompletion`;
   }
 
-  remove(id: number) {
+  async remove(id: number) {
     return `This action removes a #${id} courseCompletion`;
   }
 }

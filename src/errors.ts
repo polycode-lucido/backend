@@ -85,7 +85,7 @@ export class HTTPErrorFilter extends BaseExceptionFilter {
     }
 
     Logger.error(
-      error?.message ? error.message : 'No message',
+      error?.stack ? error.message : 'No message',
       'ExceptionFilter',
     );
 

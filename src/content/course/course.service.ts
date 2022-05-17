@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Document } from 'mongoose';
 import { NotFoundError } from 'src/errors';
 import { ExerciseDocument } from '../exercise/entities/exercise.schema';
 import { ExerciseService } from '../exercise/exercise.service';
@@ -83,7 +83,7 @@ export class CourseService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<Course & Document<any, any, any>> {
     return mongoErrorWrapper(async () => {
       const course = await this.courseModel.findById(id).exec();
       if (!course) {
