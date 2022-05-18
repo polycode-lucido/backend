@@ -26,7 +26,6 @@ export function mongoErrorHandler(error: Error) {
   } else if (error instanceof CustomError) {
     throw error;
   } else {
-    debugger;
     throw new UnknownError(error.stack);
   }
 }

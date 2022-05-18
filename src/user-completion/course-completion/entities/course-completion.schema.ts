@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IsDefined } from 'class-validator';
+import { Allow, IsDefined } from 'class-validator';
 import * as mongoose from 'mongoose';
 import { Document } from 'mongoose';
 import { Course } from 'src/content/course/entities/course.schema';
@@ -33,6 +33,7 @@ export class CourseCompletion extends ContentCompletionParent {
   @Prop({ type: mongoose.Schema.Types.Date, default: Date.now })
   enrolledAt: Date;
 
+  @Allow()
   @Prop({ type: mongoose.Schema.Types.Number, default: 0 })
   progressRate = 0;
 

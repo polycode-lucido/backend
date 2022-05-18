@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -45,11 +46,12 @@ export class CourseCompletionController {
     @Param('id') id: string,
     @Body() updateCourseCompletionDto: UpdateCourseCompletionDto,
   ) {
-    return this.courseCompletionService.update(+id, updateCourseCompletionDto);
+    return this.courseCompletionService.update(id, updateCourseCompletionDto);
   }
 
   @Delete(':id')
+  @HttpCode(204)
   async remove(@Param('id') id: string) {
-    return this.courseCompletionService.remove(+id);
+    return this.courseCompletionService.remove(id);
   }
 }

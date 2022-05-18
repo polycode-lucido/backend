@@ -1,4 +1,5 @@
 import { Prop } from '@nestjs/mongoose';
+import { Allow } from 'class-validator';
 import { CourseCompletion } from '../course-completion/entities/course-completion.schema';
 import { ExerciseCompletion } from '../course-completion/entities/exercise-completion.schema';
 import { LessonCompletion } from '../course-completion/entities/lesson-completion.schema';
@@ -6,6 +7,7 @@ import { ModuleCompletion } from '../course-completion/entities/module-completio
 import { ContentCompletion, ContentType } from './content-completion.schema';
 
 export abstract class ContentCompletionParent extends ContentCompletion {
+  @Allow()
   @Prop()
   children: ContentCompletion[];
 }
@@ -28,7 +30,6 @@ export function computeProgressRate(courseCompletion: CourseCompletion) {
       }
     }, 0) / courseCompletion.children.length;
   courseCompletion.progressRate = progressRate;
-  debugger;
   return progressRate;
 }
 

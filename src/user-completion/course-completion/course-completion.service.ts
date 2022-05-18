@@ -43,8 +43,6 @@ export class CourseCompletionService {
         course.modules,
       );
 
-      debugger;
-
       return await courseCompletion.save();
     });
   }
@@ -84,13 +82,33 @@ export class CourseCompletionService {
   }
 
   async update(
-    id: number,
+    id: string,
     updateCourseCompletionDto: UpdateCourseCompletionDto,
   ) {
-    return `This action updates a #${id} courseCompletion`;
+    return mongoErrorWrapper(async () => {
+      const courseCompletion =
+        await this.courseCompletionModel.findByIdAndUpdate(
+          id,
+          updateCourseCompletionDto,
+          {
+            new: true,
+          },
+        );
+      if (!courseCompletion) {
+        throw new NotFoundError('CourseCompletion not found');
+      }
+      return await courseCompletion.save();
+    });
   }
 
-  async remove(id: number) {
-    return `This action removes a #${id} courseCompletion`;
+  async remove(id: string) {
+    return mongoErrorWrapper(async () => {
+      const courseCompletion =
+        await this.courseCompletionModel.findByIdAndDelete(id);
+      if (!courseCompletion) {
+        throw new NotFoundError('CourseCompletion not found');
+      }
+      return courseCompletion;
+    });
   }
 }
