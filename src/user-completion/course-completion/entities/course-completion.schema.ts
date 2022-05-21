@@ -68,5 +68,6 @@ export const CourseCompletionSchema =
 CourseCompletionSchema.index({ userId: 1, course: 1 }, { unique: true });
 CourseCompletionSchema.pre('save', function (next) {
   computeProgressRate(this as any as CourseCompletion);
+  this.markModified('children');
   next();
 });

@@ -24,7 +24,7 @@ export class Exercise extends Content implements Children {
 
   @IsDefined()
   @Prop([ExerciseOuput])
-  expectedOutput: ExerciseOuput[];
+  expectedOutput: string[];
 
   @Allow()
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Course' })

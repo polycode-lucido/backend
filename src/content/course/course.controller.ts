@@ -28,9 +28,14 @@ export class CourseController {
     return this.coursesService.findAll();
   }
 
-  @Get(':id')
+  @Get('/id/:id')
   async findOne(@Param('id') id: string) {
     return this.coursesService.findOne(id);
+  }
+
+  @Get('/recommended')
+  async getRecommendedCourses() {
+    return this.coursesService.getRecommendedCourses();
   }
 
   @Patch(':id')

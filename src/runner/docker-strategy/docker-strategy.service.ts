@@ -36,7 +36,7 @@ export class DockerStrategyService implements RunnerProvider {
   async run(
     sourceCode: string,
     language: RunLanguages,
-    runId: number,
+    runId: string,
   ): Promise<RunnerExecutionResults> {
     try {
       const image = this.images.find(
@@ -101,7 +101,11 @@ export class DockerStrategyService implements RunnerProvider {
       const exitCode = await Promise.race([container.wait(), this.timeoutIn()]);
       Logger.debug(`Container ${container.id} ended for language ${language}`);
 
-      await container.kill();
+      try {
+        await container.kill();
+      } catch (e) {
+        Logger.error(e);
+      }
       await container.remove();
 
       return {

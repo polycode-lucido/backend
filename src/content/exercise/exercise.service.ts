@@ -61,7 +61,7 @@ export class ExerciseService {
     return mongoErrorWrapper(async () => {
       const exercise = await this.exerciseModel.findById(id).exec();
       if (!exercise) {
-        throw new NotFoundError(`Module with id ${id} not found`);
+        throw new NotFoundError(`Exercise with id ${id} not found`);
       }
       return exercise;
     });

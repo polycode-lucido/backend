@@ -13,11 +13,22 @@ import {
   imports: [
     ContentModule,
     EntityModule,
-    MongooseModule.forFeature([
-      { name: CourseCompletion.name, schema: CourseCompletionSchema },
+    MongooseModule.forFeatureAsync([
+      {
+        name: CourseCompletion.name,
+        useFactory: () => {
+          const schema = CourseCompletionSchema;
+          schema.pre(['findOne', 'find'], function (next) {
+            this.populate('course');
+            next();
+          });
+          return schema;
+        },
+      },
     ]),
   ],
   controllers: [CourseCompletionController],
   providers: [CourseCompletionService],
+  exports: [CourseCompletionService],
 })
 export class CourseCompletionModule {}

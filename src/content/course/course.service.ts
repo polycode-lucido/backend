@@ -139,4 +139,10 @@ export class CourseService {
       return await course.delete();
     });
   }
+
+  async getRecommendedCourses() {
+    return mongoErrorWrapper(async () => {
+      return await (await this.findAll()).slice(0, 3);
+    });
+  }
 }

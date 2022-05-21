@@ -19,14 +19,15 @@ export interface RunnerExecutionResults {
   stdout: string;
   stderr: string;
   exitCode?: number;
-  runId: number;
+  runId: string;
+  outputMatching?: boolean;
 }
 
 export interface RunnerProvider {
   run(
     sourceCode: string,
     strategy: RunLanguages,
-    runId: number,
+    runId: string,
   ): Promise<RunnerExecutionResults>;
 }
 

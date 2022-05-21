@@ -21,7 +21,7 @@ export class ForkStrategyService implements RunnerProvider {
   async run(
     sourceCode: string,
     strategy: RunLanguages,
-    runId: number,
+    runId: string,
   ): Promise<RunnerExecutionResults> {
     switch (strategy) {
       case RunLanguages.Python:
