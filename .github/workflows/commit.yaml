@@ -1,0 +1,118 @@
+name: Building docker image
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Fetch all history for all tags and branches
+        run: git fetch --prune --unshallow
+
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+
+      - name: Install yarn
+        run: npm install -g yarn
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build and push the docker image
+        uses: mr-smithers-excellent/docker-build-push@v5
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          image: polycode-lucido-backend
+          tags: ${{ steps.version.outputs.version }}
+
+  # deploy:
+  #   needs: build
+  #   runs-on: self-hosted
+  #   steps:
+  #     - uses: actions/checkout@v2
+
+  #     - name: Fetch all history for all tags and branches
+  #       run: git fetch --prune --unshallow
+
+  #     - name: Install GitVersion
+  #       uses: gittools/actions/gitversion/setup@v0.9.11
+  #       with:
+  #         versionSpec: '5.x'
+
+  #     - name: Use GitVersion
+  #       uses: gittools/actions/gitversion/execute@v0.9.11
+  #       id: gitversion
+
+  #     - name: Format git version
+  #       run: |
+  #         echo "::set-output name=version::${{ steps.gitversion.outputs.majorMinorPatch }}-${{ steps.gitversion.outputs.preReleaseTag }}-${{ steps.gitversion.outputs.shortSha }}"
+  #       id: version
+
+  #     - name: Extract branch name
+  #       uses: vazco/github-actions-branch-name@v1
+  #       id: branch
+
+  #     - name: Branch name to lowercase
+  #       uses: ASzc/change-string-case-action@v2
+  #       with:
+  #         string: ${{ steps.branch.outputs.branch_name }}
+  #       id: lowercase
+
+  #     - name: Create DNS record
+  #       uses: infraway/create-dns-record@v2.0
+  #       with:
+  #         type: "A"
+  #         name: "${{ steps.lowercase.outputs.lowercase }}.${{ secrets.CLOUDFLARE_DOMAIN }}"
+  #         content: "162.38.112.134"
+  #         ttl: 3600
+  #         proxied: false
+  #         token: ${{ secrets.CLOUDFLARE_TOKEN }}
+  #         zone: ${{ secrets.CLOUDFLARE_ZONE }}
+
+  #     - name: Create namespace
+  #       uses: steebchen/kubectl@v2.0.0
+  #       with:
+  #         config: ${{ secrets.KUBERNETES_CONFIG }}
+  #         command: create namespace ${{ steps.lowercase.outputs.lowercase }}-pr-dev
+
+  #     - name: Create secret for docker registery
+  #       uses: steebchen/kubectl@v2.0.0
+  #       with:
+  #         config: ${{ secrets.KUBERNETES_CONFIG }}
+  #         command: get secret regcred --namespace=default -oyaml | grep -v '^\s*namespace:\s' | kubectl apply --namespace=${{ steps.lowercase.outputs.lowercase }}-pr-dev -f -
+
+  #     - name: Repository Dispatch
+  #       uses: peter-evans/repository-dispatch@v1
+  #       with:
+  #         token: ${{ secrets.GH_DISPATCHER_TOKEN }}
+  #         repository: do3-2021/deployment-cicd
+  #         event-type: deploy-node
+  #         client-payload: |
+  #           {
+  #             "author": "${{ github.actor }}",
+  #             "version": "${{ steps.version.outputs.version }}",
+  #             "namespace": "${{ steps.lowercase.outputs.lowercase }}-pr-dev",
+  #             "host": "${{ steps.lowercase.outputs.lowercase }}.${{ secrets.CLOUDFLARE_DOMAIN }}",
+  #             "branch": "${{ steps.lowercase.outputs.lowercase }}"
+  #           }
+
+  #     - name: Create comment with links
+  #       if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
+  #       uses: peter-evans/create-or-update-comment@v1
+  #       with:
+  #         issue-number: ${{ github.event.pull_request.number }}
+  #         body: |
+  #           Testing URL : https://${{ steps.lowercase.outputs.lowercase }}.${{ secrets.CLOUDFLARE_DOMAIN }}
+  #           Your namespace in the kube cluster is : ${{ steps.lowercase.outputs.lowercase }}-pr-dev
+
+  #           Happy testing 😁
+
+  #         reactions: rocket
