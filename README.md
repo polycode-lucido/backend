@@ -88,3 +88,6 @@ Nest is [MIT licensed](LICENSE).
 `RUNNER_DOCKER_RUST_IMAGE`: Optional. When using the `docker` runner strategy, specifies what image to use. Defaults to `openjdk:17-jdk`
 `RUNNER_DOCKER_PYTHON_IMAGE`: Optional. When using the `docker` runner strategy, specifies what image to use. Defaults to `openjdk:17-jdk`
 
+`MONGO_HOST`: Optional. Mongo url to use to connect to the mongo database. Defaults to `mongodb://localhost/polycode`
+`MONGO_USER`: Optional. Mongo user to use to connect to the mongo database. Defaults to `user`
+`MONGO_PASSWORD`: Optional. Mongo password to use to connect to the mongo database. Defaults to `password`

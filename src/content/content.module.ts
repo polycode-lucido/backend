@@ -1,17 +1,23 @@
-import { Logger, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CourseModule } from './course/course.module';
+import { registerer, validationSchema } from './course/mongo.config';
 import { ExerciseModule } from './exercise/exercise.module';
 import { LessonModule } from './lesson/lesson.module';
 import { ModuleModule } from './module/module.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost/polycode', {
-      user: 'user',
-      pass: 'password',
-      logger: Logger.debug.bind(Logger),
-      loggerLevel: 'debug',
+    ConfigModule.forRoot({
+      load: [registerer],
+      validationSchema,
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) =>
+        configService.get('mongo'),
+      inject: [ConfigService],
     }),
     CourseModule,
     ExerciseModule,

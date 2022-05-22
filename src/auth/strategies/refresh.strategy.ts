@@ -21,7 +21,15 @@ export class RefreshStrategy extends PassportStrategy(Strategy, 'refresh') {
       jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('Bearer'),
       ignoreExpiration: true,
       algorithms: ['RS512'],
-      secretOrKey: authConfig.refreshPublicKey,
+      secretOrKey: `-----BEGIN PUBLIC KEY-----
+      MIIBITANBgkqhkiG9w0BAQEFAAOCAQ4AMIIBCQKCAQB51/cNINZop9YWYbPLc9y0
+      SXZdfEa+a7EwgAU/DWAXnas3r6tbqfGAlMJXAkvWeIN2f/KLrpV3ZgONffycpWCo
+      +NQZE9NUUmdxrtiLzqbTSNYFAAnLUKU0uJo2lY0ntSMNhx9/8+C2YUwRNUVnIZ4A
+      SdPOOC06pT5t25Xvzk8vpsNy3E5fGoRQaxwenD4/dMHmuxg+lwyMof2g2JadMrAz
+      x28lgwe3yTbseGvh/EeJ4fyWO/+H63NInnNXZp7fq+DcFgcGVWgacf8dNjc9KaGJ
+      QeJbj9qogge/uXyVaUlMF3Z2Q5rxpwfJ5gGJgxeJ2zSwrXRxGT1UBRuWzL9aeVr5
+      AgMBAAE=
+      -----END PUBLIC KEY-----`,
       passReqToCallback: true,
     });
   }
