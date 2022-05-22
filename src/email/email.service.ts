@@ -25,7 +25,7 @@ export class EmailService {
       <body>
           <p>Hi ${firstname},</p>
           <p>Please verify your account by clicking on the following link:</p>
-          <p><a href="http://localhost:3001/emailverification?token=${token}">Verify</a></p>
+          <p><a href="https://simonlucido.com/emailverification?token=${token}">Verify</a></p>
         </body>
       </html>
     `,
@@ -46,7 +46,7 @@ export class EmailService {
       <body>
           <p>Hi ${firstname},</p>
           <p>Please change your password by clicking on the following link:</p>
-          <p><a href="http://localhost:3001/changepassword?token=${token}">Change password</a></p>
+          <p><a href="http://simonlucido.com/changepassword?token=${token}">Change password</a></p>
         </body>
       </html>
     `,
